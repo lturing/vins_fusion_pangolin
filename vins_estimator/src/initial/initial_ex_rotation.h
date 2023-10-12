@@ -12,14 +12,13 @@
 #pragma once 
 
 #include <vector>
-#include "../estimator/parameters.h"
+#include "parameters.h"
 using namespace std;
 
 #include <opencv2/opencv.hpp>
-
 #include <eigen3/Eigen/Dense>
 using namespace Eigen;
-#include <ros/console.h>
+
 
 /* This class help you to calibrate extrinsic rotation between imu and camera when your totally don't konw the extrinsic parameter */
 class InitialEXRotation

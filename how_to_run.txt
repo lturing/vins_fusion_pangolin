@@ -1,0 +1,6 @@
+
+# for debug
+gdb --args ./examples/stereo_kitti support_files/brief_k10L6.bin config/kitti_odom/kitti_config00-02.yaml /home/spurs/dataset/kitti_00
+
+# run
+./examples/stereo_kitti support_files/brief_k10L6.bin  config/kitti_odom/kitti_config00-02.yaml /home/spurs/dataset/kitti_00

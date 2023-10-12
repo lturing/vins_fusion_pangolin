@@ -1,12 +1,12 @@
-#include "camodocal/camera_models/CameraFactory.h"
+#include "CameraFactory.h"
 
 #include <boost/algorithm/string.hpp>
 
-#include "camodocal/camera_models/CataCamera.h"
-#include "camodocal/camera_models/EquidistantCamera.h"
-#include "camodocal/camera_models/PinholeCamera.h"
-#include "camodocal/camera_models/PinholeFullCamera.h"
-#include "camodocal/camera_models/ScaramuzzaCamera.h"
+#include "CataCamera.h"
+#include "EquidistantCamera.h"
+#include "PinholeCamera.h"
+#include "PinholeFullCamera.h"
+#include "ScaramuzzaCamera.h"
 
 #include "ceres/ceres.h"
 

@@ -29,6 +29,7 @@ int ROLLING_SHUTTER;
 std::string EX_CALIB_RESULT_PATH;
 std::string VINS_RESULT_PATH;
 std::string OUTPUT_FOLDER;
+std::string POSE_GRAPH_SAVE_PATH;
 std::string IMU_TOPIC;
 int ROW, COL;
 double TD;
@@ -46,30 +47,14 @@ double F_THRESHOLD;
 int SHOW_TRACK;
 int FLOW_BACK;
 
-
-template <typename T>
-T readParam(ros::NodeHandle &n, std::string name)
-{
-    T ans;
-    if (n.getParam(name, ans))
-    {
-        ROS_INFO_STREAM("Loaded " << name << ": " << ans);
-    }
-    else
-    {
-        ROS_ERROR_STREAM("Failed to load " << name);
-        n.shutdown();
-    }
-    return ans;
-}
+string BRIEF_PATTERN_FILE;
 
 void readParameters(std::string config_file)
 {
     FILE *fh = fopen(config_file.c_str(),"r");
     if(fh == NULL){
-        ROS_WARN("config_file dosen't exist; wrong config_file path");
-        ROS_BREAK();
-        return;          
+        std::cout << "config_file dosen't exist; wrong config_file path" << std::endl;
+        exit(1);         
     }
     fclose(fh);
 
@@ -77,6 +62,7 @@ void readParameters(std::string config_file)
     if(!fsSettings.isOpened())
     {
         std::cerr << "ERROR: Wrong path to settings" << std::endl;
+        exit(1);
     }
 
     fsSettings["image0_topic"] >> IMAGE0_TOPIC;
@@ -90,11 +76,11 @@ void readParameters(std::string config_file)
     MULTIPLE_THREAD = fsSettings["multiple_thread"];
 
     USE_IMU = fsSettings["imu"];
-    printf("USE_IMU: %d\n", USE_IMU);
+    std::cout << "USE_IMU: " << USE_IMU << std::endl;
     if(USE_IMU)
     {
         fsSettings["imu_topic"] >> IMU_TOPIC;
-        printf("IMU_TOPIC: %s\n", IMU_TOPIC.c_str());
+        std::cout << "IMU_TOPIC: " << IMU_TOPIC.c_str() << std::endl;
         ACC_N = fsSettings["acc_n"];
         ACC_W = fsSettings["acc_w"];
         GYR_N = fsSettings["gyr_n"];
@@ -108,6 +94,7 @@ void readParameters(std::string config_file)
     MIN_PARALLAX = MIN_PARALLAX / FOCAL_LENGTH;
 
     fsSettings["output_path"] >> OUTPUT_FOLDER;
+    POSE_GRAPH_SAVE_PATH = OUTPUT_FOLDER;
     VINS_RESULT_PATH = OUTPUT_FOLDER + "/vio.csv";
     std::cout << "result path " << VINS_RESULT_PATH << std::endl;
     std::ofstream fout(VINS_RESULT_PATH, std::ios::out);
@@ -116,7 +103,7 @@ void readParameters(std::string config_file)
     ESTIMATE_EXTRINSIC = fsSettings["estimate_extrinsic"];
     if (ESTIMATE_EXTRINSIC == 2)
     {
-        ROS_WARN("have no prior about extrinsic param, calibrate extrinsic param");
+        std::cout << "have no prior about extrinsic param, calibrate extrinsic param" << std::endl;
         RIC.push_back(Eigen::Matrix3d::Identity());
         TIC.push_back(Eigen::Vector3d::Zero());
         EX_CALIB_RESULT_PATH = OUTPUT_FOLDER + "/extrinsic_parameter.csv";
@@ -125,11 +112,11 @@ void readParameters(std::string config_file)
     {
         if ( ESTIMATE_EXTRINSIC == 1)
         {
-            ROS_WARN(" Optimize extrinsic param around initial guess!");
+            std::cout << " Optimize extrinsic param around initial guess!" << std::endl;
             EX_CALIB_RESULT_PATH = OUTPUT_FOLDER + "/extrinsic_parameter.csv";
         }
         if (ESTIMATE_EXTRINSIC == 0)
-            ROS_WARN(" fix extrinsic param ");
+            std::cout << " fix extrinsic param " << std::endl;
 
         cv::Mat cv_T;
         fsSettings["body_T_cam0"] >> cv_T;
@@ -140,14 +127,13 @@ void readParameters(std::string config_file)
     } 
     
     NUM_OF_CAM = fsSettings["num_of_cam"];
-    printf("camera number %d\n", NUM_OF_CAM);
+    std::cout << "camera number: " << NUM_OF_CAM << std::endl;
 
     if(NUM_OF_CAM != 1 && NUM_OF_CAM != 2)
     {
-        printf("num_of_cam should be 1 or 2\n");
-        assert(0);
+        std::cout << "num_of_cam should be 1 or 2\n" << std::endl;
+        exit(1);
     }
-
 
     int pn = config_file.find_last_of('/');
     std::string configPath = config_file.substr(0, pn);
@@ -163,7 +149,7 @@ void readParameters(std::string config_file)
         std::string cam1Calib;
         fsSettings["cam1_calib"] >> cam1Calib;
         std::string cam1Path = configPath + "/" + cam1Calib; 
-        //printf("%s cam1 path\n", cam1Path.c_str() );
+        //std::cout << cam1Path.c_str() << " cam1 path" << std::endl;
         CAM_NAMES.push_back(cam1Path);
         
         cv::Mat cv_T;
@@ -181,20 +167,23 @@ void readParameters(std::string config_file)
     TD = fsSettings["td"];
     ESTIMATE_TD = fsSettings["estimate_td"];
     if (ESTIMATE_TD)
-        ROS_INFO_STREAM("Unsynchronized sensors, online estimate time offset, initial td: " << TD);
+        std::cout << "Unsynchronized sensors, online estimate time offset, initial td: " << TD << std::endl;
     else
-        ROS_INFO_STREAM("Synchronized sensors, fix time offset: " << TD);
+        std::cout << "Synchronized sensors, fix time offset: " << TD << std::endl;
 
     ROW = fsSettings["image_height"];
     COL = fsSettings["image_width"];
-    ROS_INFO("ROW: %d COL: %d ", ROW, COL);
+    std::cout << "ROW: " << ROW << "COL: " << COL << std::endl;
 
     if(!USE_IMU)
     {
         ESTIMATE_EXTRINSIC = 0;
         ESTIMATE_TD = 0;
-        printf("no imu, fix extrinsic param; no time offset calibration\n");
+        std::cout << "no imu, fix extrinsic param; no time offset calibration\n" << std::endl;
     }
 
+    //BRIEF_PATTERN_FILE = "./support_files/brief_pattern.yml";
+    BRIEF_PATTERN_FILE = "/home/spurs/x/VINS-Fusion/support_files/brief_pattern.yml";
+    
     fsSettings.release();
 }

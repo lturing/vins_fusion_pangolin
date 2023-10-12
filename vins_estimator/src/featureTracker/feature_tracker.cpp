@@ -21,7 +21,7 @@ bool FeatureTracker::inBorder(const cv::Point2f &pt)
 
 double distance(cv::Point2f pt1, cv::Point2f pt2)
 {
-    //printf("pt1: %f %f pt2: %f %f\n", pt1.x, pt1.y, pt2.x, pt2.y);
+    //std::cout << "pt1: " << pt1.x << " " << pt1.y << " pt2: " << pt2.x << " " << pt2.y << std::endl;
     double dx = pt1.x - pt2.x;
     double dy = pt1.y - pt2.y;
     return sqrt(dx * dx + dy * dy);
@@ -85,7 +85,7 @@ void FeatureTracker::setMask()
 
 double FeatureTracker::distance(cv::Point2f &pt1, cv::Point2f &pt2)
 {
-    //printf("pt1: %f %f pt2: %f %f\n", pt1.x, pt1.y, pt2.x, pt2.y);
+    //std::cout << "pt1: " << pt1.x << " " << pt1.y << " pt2: " <<  pt2.x << " " << pt2.y << std::endl;
     double dx = pt1.x - pt2.x;
     double dy = pt1.y - pt2.y;
     return sqrt(dx * dx + dy * dy);
@@ -157,8 +157,8 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
         reduceVector(cur_pts, status);
         reduceVector(ids, status);
         reduceVector(track_cnt, status);
-        ROS_DEBUG("temporal optical flow costs: %fms", t_o.toc());
-        //printf("track cnt %d\n", (int)ids.size());
+        std::cout << "temporal optical flow costs: " << t_o.toc() << " ms" << std::endl;
+        //std::cout << "track cnt: " << ids.size() << std::endl;
     }
 
     for (auto &n : track_cnt)
@@ -167,12 +167,12 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
     if (1)
     {
         //rejectWithF();
-        ROS_DEBUG("set mask begins");
+        std::cout << "set mask begins" << std::endl;
         TicToc t_m;
         setMask();
-        ROS_DEBUG("set mask costs %fms", t_m.toc());
+        std::cout << "set mask costs: " << t_m.toc() << " ms" << std::endl;
 
-        ROS_DEBUG("detect feature begins");
+        std::cout << "detect feature begins" << std::endl;
         TicToc t_t;
         int n_max_cnt = MAX_CNT - static_cast<int>(cur_pts.size());
         if (n_max_cnt > 0)
@@ -185,7 +185,7 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
         }
         else
             n_pts.clear();
-        ROS_DEBUG("detect feature costs: %f ms", t_t.toc());
+        std::cout << "detect feature costs: " << t_t.toc() << " ms" << std::endl;
 
         for (auto &p : n_pts)
         {
@@ -193,7 +193,7 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
             ids.push_back(n_id++);
             track_cnt.push_back(1);
         }
-        //printf("feature cnt after add %d\n", (int)ids.size());
+        //std::cout << "feature cnt after add: " << ids.size() << std::endl;
     }
 
     cur_un_pts = undistortedPts(cur_pts, m_camera[0]);
@@ -208,7 +208,7 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
         cur_un_right_pts_map.clear();
         if(!cur_pts.empty())
         {
-            //printf("stereo image; track feature on right image\n");
+            //std::cout << "stereo image; track feature on right image" << std::endl;
             vector<cv::Point2f> reverseLeftPts;
             vector<uchar> status, statusRightLeft;
             vector<float> err;
@@ -243,8 +243,8 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
         }
         prev_un_right_pts_map = cur_un_right_pts_map;
     }
-    if(SHOW_TRACK)
-        drawTrack(cur_img, rightImg, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
+    //if(SHOW_TRACK)
+    drawTrack(cur_img, rightImg, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
 
     prev_img = cur_img;
     prev_pts = cur_pts;
@@ -301,7 +301,7 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
         }
     }
 
-    //printf("feature track whole time %f\n", t_r.toc());
+    //std::cout << "feature track whole time: " << t_r.toc() << std::endl;
     return featureFrame;
 }
 
@@ -309,7 +309,7 @@ void FeatureTracker::rejectWithF()
 {
     if (cur_pts.size() >= 8)
     {
-        ROS_DEBUG("FM ransac begins");
+        std::cout << "FM ransac begins" << std::endl;
         TicToc t_f;
         vector<cv::Point2f> un_cur_pts(cur_pts.size()), un_prev_pts(prev_pts.size());
         for (unsigned int i = 0; i < cur_pts.size(); i++)
@@ -334,8 +334,8 @@ void FeatureTracker::rejectWithF()
         reduceVector(cur_un_pts, status);
         reduceVector(ids, status);
         reduceVector(track_cnt, status);
-        ROS_DEBUG("FM ransac: %d -> %lu: %f", size_a, cur_pts.size(), 1.0 * cur_pts.size() / size_a);
-        ROS_DEBUG("FM ransac costs: %fms", t_f.toc());
+        std::cout << "FM ransac: " << size_a << " -> " << cur_pts.size() << " : " << 1.0 * cur_pts.size() / size_a << std::endl;
+        std::cout << "FM ransac costs: " << t_f.toc() << " ms" << std::endl;
     }
 }
 
@@ -343,7 +343,7 @@ void FeatureTracker::readIntrinsicParameter(const vector<string> &calib_file)
 {
     for (size_t i = 0; i < calib_file.size(); i++)
     {
-        ROS_INFO("reading paramerter of camera %s", calib_file[i].c_str());
+        std::cout << "reading paramerter of camera: " << calib_file[i] << std::endl;
         camodocal::CameraPtr camera = CameraFactory::instance()->generateCameraFromYamlFile(calib_file[i]);
         m_camera.push_back(camera);
     }
@@ -363,7 +363,7 @@ void FeatureTracker::showUndistortion(const string &name)
             m_camera[0]->liftProjective(a, b);
             distortedp.push_back(a);
             undistortedp.push_back(Eigen::Vector2d(b.x() / b.z(), b.y() / b.z()));
-            //printf("%f,%f->%f,%f,%f\n)\n", a.x(), a.y(), b.x(), b.y(), b.z());
+            //std::cout << a.x() << "," << a.y() << "->" << b.x() << "," << b.y() << "," << b.z() << std::endl;
         }
     for (int i = 0; i < int(undistortedp.size()); i++)
     {
@@ -372,15 +372,15 @@ void FeatureTracker::showUndistortion(const string &name)
         pp.at<float>(1, 0) = undistortedp[i].y() * FOCAL_LENGTH + row / 2;
         pp.at<float>(2, 0) = 1.0;
         //cout << trackerData[0].K << endl;
-        //printf("%lf %lf\n", p.at<float>(1, 0), p.at<float>(0, 0));
-        //printf("%lf %lf\n", pp.at<float>(1, 0), pp.at<float>(0, 0));
+        //std::cout << p.at<float>(1, 0) << ", " << p.at<float>(0, 0) << std::endl;
+        //std::cout << pp.at<float>(1, 0) << ", " << pp.at<float>(0, 0) << std::endl;
         if (pp.at<float>(1, 0) + 300 >= 0 && pp.at<float>(1, 0) + 300 < row + 600 && pp.at<float>(0, 0) + 300 >= 0 && pp.at<float>(0, 0) + 300 < col + 600)
         {
             undistortedImg.at<uchar>(pp.at<float>(1, 0) + 300, pp.at<float>(0, 0) + 300) = cur_img.at<uchar>(distortedp[i].y(), distortedp[i].x());
         }
         else
         {
-            //ROS_ERROR("(%f %f) -> (%f %f)", distortedp[i].y, distortedp[i].x, pp.at<float>(1, 0), pp.at<float>(0, 0));
+            //std::cout << distortedp[i].y << " " << distortedp[i].x <<  " -> " <<  pp.at<float>(1, 0) << " " << pp.at<float>(0, 0) << std::endl;
         }
     }
     // turn the following code on if you need
@@ -453,8 +453,9 @@ void FeatureTracker::drawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
         cv::hconcat(imLeft, imRight, imTrack);
     else
         imTrack = imLeft.clone();
-    cv::cvtColor(imTrack, imTrack, CV_GRAY2RGB);
-
+    //cv::cvtColor(imTrack, imTrack, cv::COLOR_GRAY2RGB);
+    cv::cvtColor(imTrack, imTrack, cv::COLOR_GRAY2BGR);
+    
     for (size_t j = 0; j < curLeftPts.size(); j++)
     {
         double len = std::min(1.0, 1.0 * track_cnt[j] / 20);
@@ -490,7 +491,7 @@ void FeatureTracker::drawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
         cv::circle(imTrack, predict_pts_debug[i], 2, cv::Scalar(0, 170, 255), 2);
     }
     */
-    //printf("predict pts size %d \n", (int)predict_pts_debug.size());
+    //std::cout << "predict pts size " << predict_pts_debug.size() << std::endl;
 
     //cv::Mat imCur2Compress;
     //cv::resize(imCur2, imCur2Compress, cv::Size(cols, rows / 2));
@@ -505,7 +506,7 @@ void FeatureTracker::setPrediction(map<int, Eigen::Vector3d> &predictPts)
     map<int, Eigen::Vector3d>::iterator itPredict;
     for (size_t i = 0; i < ids.size(); i++)
     {
-        //printf("prevLeftId size %d prevLeftPts size %d\n",(int)prevLeftIds.size(), (int)prevLeftPts.size());
+        //std::cout << "prevLeftId size " << prevLeftIds.size() << " prevLeftPts size " << prevLeftPts.size() << std::endl;
         int id = ids[i];
         itPredict = predictPts.find(id);
         if (itPredict != predictPts.end())

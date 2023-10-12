@@ -1,4 +1,4 @@
-#include "camodocal/gpl/EigenQuaternionParameterization.h"
+#include "EigenQuaternionParameterization.h"
 
 #include <cmath>
 

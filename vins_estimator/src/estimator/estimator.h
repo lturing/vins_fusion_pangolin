@@ -11,8 +11,6 @@
  
 #include <thread>
 #include <mutex>
-#include <std_msgs/Header.h>
-#include <std_msgs/Float32.h>
 #include <ceres/ceres.h>
 #include <unordered_map>
 #include <queue>
@@ -20,27 +18,30 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
+
 #include "parameters.h"
 #include "feature_manager.h"
-#include "../utility/utility.h"
-#include "../utility/tic_toc.h"
-#include "../initial/solve_5pts.h"
-#include "../initial/initial_sfm.h"
-#include "../initial/initial_alignment.h"
-#include "../initial/initial_ex_rotation.h"
-#include "../factor/imu_factor.h"
-#include "../factor/pose_local_parameterization.h"
-#include "../factor/marginalization_factor.h"
-#include "../factor/projectionTwoFrameOneCamFactor.h"
-#include "../factor/projectionTwoFrameTwoCamFactor.h"
-#include "../factor/projectionOneFrameTwoCamFactor.h"
-#include "../featureTracker/feature_tracker.h"
-
+#include "utility.h"
+#include "tic_toc.h"
+#include "solve_5pts.h"
+#include "initial_sfm.h"
+#include "initial_alignment.h"
+#include "initial_ex_rotation.h"
+#include "imu_factor.h"
+#include "pose_local_parameterization.h"
+#include "marginalization_factor.h"
+#include "projectionTwoFrameOneCamFactor.h"
+#include "projectionTwoFrameTwoCamFactor.h"
+#include "projectionOneFrameTwoCamFactor.h"
+#include "feature_tracker.h"
+#include "keyframe.h"
+#include "pose_graph.h"
+#include "viewer.h"
 
 class Estimator
 {
   public:
-    Estimator();
+    Estimator(string vocabulary_file);
     ~Estimator();
     void setParameter();
 
@@ -50,7 +51,7 @@ class Estimator
     void inputFeature(double t, const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &featureFrame);
     void inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1 = cv::Mat());
     void processIMU(double t, double dt, const Vector3d &linear_acceleration, const Vector3d &angular_velocity);
-    void processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, const double header);
+    void processImage(const pair<pair<cv::Mat, cv::Mat>, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>> &image, const double header);
     void processMeasurements();
     void changeSensorType(int use_imu, int use_stereo);
 
@@ -80,6 +81,17 @@ class Estimator
     bool IMUAvailable(double t);
     void initFirstIMUPose(vector<pair<double, Eigen::Vector3d>> &accVector);
 
+    void getPosePoints(Vector3d& vio_T_w_i, Matrix3d& vio_R_w_i, vector<cv::Point3f>& point_3d, vector<cv::Point2f>& point_2d_uv, vector<cv::Point2f>& point_2d_normal, vector<double>& point_id, double& frame_time, cv::Mat& image, cv::Mat& image_result);
+
+    void shutdown();
+    void setViewer(boost::shared_ptr< PangolinDSOViewer > viewer) 
+    {
+        loop_graph->setViewer(viewer);
+    }
+
+    Eigen::Vector3d last_t;
+    int frame_index;
+
     enum SolverFlag
     {
         INITIAL,
@@ -97,7 +109,7 @@ class Estimator
     std::mutex mPropagate;
     queue<pair<double, Eigen::Vector3d>> accBuf;
     queue<pair<double, Eigen::Vector3d>> gyrBuf;
-    queue<pair<double, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1> > > > > > featureBuf;
+    queue<pair<double, pair<pair<cv::Mat, cv::Mat>, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1> > > > > > > featureBuf;
     double prevTime, curTime;
     bool openExEstimation;
 
@@ -118,6 +130,9 @@ class Estimator
     Matrix3d        Rs[(WINDOW_SIZE + 1)];
     Vector3d        Bas[(WINDOW_SIZE + 1)];
     Vector3d        Bgs[(WINDOW_SIZE + 1)];
+
+    pair<cv::Mat, cv::Mat> Images[(WINDOW_SIZE + 1)];
+    boost::shared_ptr< PoseGraph > loop_graph;
     double td;
 
     Matrix3d back_R0, last_R, last_R0;
@@ -142,6 +157,7 @@ class Estimator
     bool first_imu;
     bool is_valid, is_key;
     bool failure_occur;
+    bool stop_require;
 
     vector<Vector3d> point_cloud;
     vector<Vector3d> margin_cloud;
@@ -174,4 +190,5 @@ class Estimator
 
     bool initFirstPoseFlag;
     bool initThreadFlag;
+    boost::shared_ptr< PangolinDSOViewer > myViewer;
 };

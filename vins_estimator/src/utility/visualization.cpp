@@ -82,17 +82,17 @@ void printStatistics(const Estimator &estimator, double t)
 {
     if (estimator.solver_flag != Estimator::SolverFlag::NON_LINEAR)
         return;
-    //printf("position: %f, %f, %f\r", estimator.Ps[WINDOW_SIZE].x(), estimator.Ps[WINDOW_SIZE].y(), estimator.Ps[WINDOW_SIZE].z());
-    ROS_DEBUG_STREAM("position: " << estimator.Ps[WINDOW_SIZE].transpose());
-    ROS_DEBUG_STREAM("orientation: " << estimator.Vs[WINDOW_SIZE].transpose());
+    //std::cout << "position: " << estimator.Ps[WINDOW_SIZE].x() << ", " << estimator.Ps[WINDOW_SIZE].y() << ", " << estimator.Ps[WINDOW_SIZE].z() << std::endl;
+    std::cout << "position: " << estimator.Ps[WINDOW_SIZE].transpose() << std::endl;
+    std::cout << "orientation: " << estimator.Vs[WINDOW_SIZE].transpose() << std::endl;
     if (ESTIMATE_EXTRINSIC)
     {
         cv::FileStorage fs(EX_CALIB_RESULT_PATH, cv::FileStorage::WRITE);
         for (int i = 0; i < NUM_OF_CAM; i++)
         {
-            //ROS_DEBUG("calibration result for camera %d", i);
-            ROS_DEBUG_STREAM("extirnsic tic: " << estimator.tic[i].transpose());
-            ROS_DEBUG_STREAM("extrinsic ric: " << Utility::R2ypr(estimator.ric[i]).transpose());
+            //std::cout << "calibration result for camera: " << i << std::endl;
+            std::cout << "extirnsic tic: " << estimator.tic[i].transpose() << std::endl;
+            std::cout << "extrinsic ric: " << Utility::R2ypr(estimator.ric[i]).transpose() << std::endl;
 
             Eigen::Matrix4d eigen_T = Eigen::Matrix4d::Identity();
             eigen_T.block<3, 3>(0, 0) = estimator.ric[i];
@@ -111,14 +111,14 @@ void printStatistics(const Estimator &estimator, double t)
     static int sum_of_calculation = 0;
     sum_of_time += t;
     sum_of_calculation++;
-    ROS_DEBUG("vo solver costs: %f ms", t);
-    ROS_DEBUG("average of time %f ms", sum_of_time / sum_of_calculation);
+    std::cout << "vo solver costs: " << t << " ms" << std::endl;
+    std::cout << "average of time " << sum_of_time / sum_of_calculation << " ms" << std::endl;
 
     sum_of_path += (estimator.Ps[WINDOW_SIZE] - last_path).norm();
     last_path = estimator.Ps[WINDOW_SIZE];
-    ROS_DEBUG("sum of path %f", sum_of_path);
+    std::cout << "sum of path: " << sum_of_path << std::endl;
     if (ESTIMATE_TD)
-        ROS_INFO("td %f", estimator.td);
+        std::cout << "td: " << estimator.td << std::endl;
 }
 
 void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
@@ -170,8 +170,7 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
               << estimator.Vs[WINDOW_SIZE].z() << "," << endl;
         foutC.close();
         Eigen::Vector3d tmp_T = estimator.Ps[WINDOW_SIZE];
-        printf("time: %f, t: %f %f %f q: %f %f %f %f \n", header.stamp.toSec(), tmp_T.x(), tmp_T.y(), tmp_T.z(),
-                                                          tmp_Q.w(), tmp_Q.x(), tmp_Q.y(), tmp_Q.z());
+        std::cout << "time: " << header.stamp.toSec() << " t: " << tmp_T.x() << " " << tmp_T.y() << " " tmp_T.z() << " q: " << tmp_Q.w() << " " << tmp_Q.x() << " " << tmp_Q.y() << " " tmp_Q.z() << std::endl;
     }
 }
 
@@ -374,7 +373,7 @@ void pubKeyframe(const Estimator &estimator)
         odometry.pose.pose.orientation.y = R.y();
         odometry.pose.pose.orientation.z = R.z();
         odometry.pose.pose.orientation.w = R.w();
-        //printf("time: %f t: %f %f %f r: %f %f %f %f\n", odometry.header.stamp.toSec(), P.x(), P.y(), P.z(), R.w(), R.x(), R.y(), R.z());
+        //std::cout << "time: " << odometry.header.stamp.toSec() << " t: " << P.x() << " " << P.y() << " " << P.z() << " r: " << R.w() << " " << R.x() << " " << R.y() << " " << R.z() << std::endl;
 
         pub_keyframe_pose.publish(odometry);
 

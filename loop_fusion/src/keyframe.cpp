@@ -22,10 +22,13 @@ static void reduceVector(vector<Derived> &v, vector<uchar> status)
 }
 
 // create keyframe online
-KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, cv::Mat &_image,
-		           vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d_uv, vector<cv::Point2f> &_point_2d_norm,
-		           vector<double> &_point_id, int _sequence)
+KeyFrame::KeyFrame(camodocal::CameraPtr _camera, Eigen::Matrix3d _qic, Eigen::Vector3d _tic, double _time_stamp, int _index, Vector3d _vio_T_w_i, Matrix3d _vio_R_w_i, cv::Mat _image, cv::Mat _image_result, 
+		           vector<cv::Point3f> _point_3d, vector<cv::Point2f> _point_2d_uv, vector<cv::Point2f> _point_2d_norm,
+		           vector<double> _point_id, int _sequence)
 {
+    m_camera = _camera;
+    qic = _qic;
+    tic = _tic;
 	time_stamp = _time_stamp;
 	index = _index;
 	vio_T_w_i = _vio_T_w_i;
@@ -35,7 +38,8 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 	origin_vio_T = vio_T_w_i;		
 	origin_vio_R = vio_R_w_i;
 	image = _image.clone();
-	cv::resize(image, thumbnail, cv::Size(80, 60));
+    image_result = _image_result.clone();
+	//cv::resize(image, thumbnail, cv::Size(80, 60));
 	point_3d = _point_3d;
 	point_2d_uv = _point_2d_uv;
 	point_2d_norm = _point_2d_norm;
@@ -45,17 +49,19 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 	has_fast_point = false;
 	loop_info << 0, 0, 0, 0, 0, 0, 0, 0;
 	sequence = _sequence;
-	computeWindowBRIEFPoint();
-	computeBRIEFPoint();
-	if(!DEBUG_IMAGE)
-		image.release();
+
+	//if(!DEBUG_IMAGE)
+	//	image.release();
 }
 
 // load previous keyframe
-KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_T_w_i, Matrix3d &_R_w_i,
+KeyFrame::KeyFrame(camodocal::CameraPtr _camera, Eigen::Matrix3d _qic, Eigen::Vector3d _tic, double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_T_w_i, Matrix3d &_R_w_i,
 					cv::Mat &_image, int _loop_index, Eigen::Matrix<double, 8, 1 > &_loop_info,
 					vector<cv::KeyPoint> &_keypoints, vector<cv::KeyPoint> &_keypoints_norm, vector<BRIEF::bitset> &_brief_descriptors)
 {
+    m_camera = _camera;
+    qic = _qic;
+    tic = _tic;
 	time_stamp = _time_stamp;
 	index = _index;
 	//vio_T_w_i = _vio_T_w_i;
@@ -64,11 +70,11 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 	vio_R_w_i = _R_w_i;
 	T_w_i = _T_w_i;
 	R_w_i = _R_w_i;
-	if (DEBUG_IMAGE)
-	{
-		image = _image.clone();
-		cv::resize(image, thumbnail, cv::Size(80, 60));
-	}
+	//if (DEBUG_IMAGE)
+	//{
+	//	image = _image.clone();
+	//	cv::resize(image, thumbnail, cv::Size(80, 60));
+	//}
 	if (_loop_index != -1)
 		has_loop = true;
 	else
@@ -82,6 +88,11 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 	brief_descriptors = _brief_descriptors;
 }
 
+void KeyFrame::computeBRIEF()
+{
+    computeWindowBRIEFPoint();
+	computeBRIEFPoint();
+}
 
 void KeyFrame::computeWindowBRIEFPoint()
 {
@@ -149,7 +160,7 @@ bool KeyFrame::searchInAera(const BRIEF::bitset window_descriptor,
             bestIndex = i;
         }
     }
-    //printf("best dist %d", bestDist);
+    //std::cout << "best dist " << bestDist << std::endl;
     if (bestIndex != -1 && bestDist < 80)
     {
       best_match = keypoints_old[bestIndex].pt;
@@ -214,8 +225,8 @@ void KeyFrame::PnPRANSAC(const vector<cv::Point2f> &matched_2d_old_norm,
                          Eigen::Vector3d &PnP_T_old, Eigen::Matrix3d &PnP_R_old)
 {
 	//for (int i = 0; i < matched_3d.size(); i++)
-	//	printf("3d x: %f, y: %f, z: %f\n",matched_3d[i].x, matched_3d[i].y, matched_3d[i].z );
-	//printf("match size %d \n", matched_3d.size());
+	//std::cout << "3d x: " << matched_3d[i].x << ", y: " << matched_3d[i].y << ", z: " << matched_3d[i].z << std::endl;
+	//std::cout << "match size " <<  matched_3d.size() << std::endl;
     cv::Mat r, rvec, t, D, tmp_r;
     cv::Mat K = (cv::Mat_<double>(3, 3) << 1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0);
     Matrix3d R_inital;
@@ -270,7 +281,7 @@ void KeyFrame::PnPRANSAC(const vector<cv::Point2f> &matched_2d_old_norm,
 bool KeyFrame::findConnection(KeyFrame* old_kf)
 {
 	TicToc tmp_t;
-	//printf("find Connection\n");
+	//std::cout << "find Connection" << std::endl;
 	vector<cv::Point2f> matched_2d_cur, matched_2d_old;
 	vector<cv::Point2f> matched_2d_cur_norm, matched_2d_old_norm;
 	vector<cv::Point3f> matched_3d;
@@ -289,7 +300,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	        cv::Mat gray_img, loop_match_img;
 	        cv::Mat old_img = old_kf->image;
 	        cv::hconcat(image, old_img, gray_img);
-	        cvtColor(gray_img, loop_match_img, CV_GRAY2RGB);
+	        cvtColor(gray_img, loop_match_img, cv::COLOR_GRAY2RGB);
 	        for(int i = 0; i< (int)point_2d_uv.size(); i++)
 	        {
 	            cv::Point2f cur_pt = point_2d_uv[i];
@@ -308,7 +319,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	        cv::imwrite( path.str().c_str(), loop_match_img);
 	    }
 	#endif
-	//printf("search by des\n");
+	//std::cout << "search by des" << std::endl;
 	searchByBRIEFDes(matched_2d_old, matched_2d_old_norm, status, old_kf->brief_descriptors, old_kf->keypoints, old_kf->keypoints_norm);
 	reduceVector(matched_2d_cur, status);
 	reduceVector(matched_2d_old, status);
@@ -316,7 +327,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	reduceVector(matched_2d_old_norm, status);
 	reduceVector(matched_3d, status);
 	reduceVector(matched_id, status);
-	//printf("search by des finish\n");
+	//std::cout << "search by des finish" << std::endl;
 
 	#if 0 
 		if (DEBUG_IMAGE)
@@ -327,7 +338,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
             cv::Mat old_img = old_kf->image;
             cv::hconcat(image, gap_image, gap_image);
             cv::hconcat(gap_image, old_img, gray_img);
-            cvtColor(gray_img, loop_match_img, CV_GRAY2RGB);
+            cvtColor(gray_img, loop_match_img, cv::COLOR_GRAY2RGB);
 	        for(int i = 0; i< (int)matched_2d_cur.size(); i++)
 	        {
 	            cv::Point2f cur_pt = matched_2d_cur[i];
@@ -383,7 +394,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
             cv::Mat old_img = old_kf->image;
             cv::hconcat(image, gap_image, gap_image);
             cv::hconcat(gap_image, old_img, gray_img);
-            cvtColor(gray_img, loop_match_img, CV_GRAY2RGB);
+            cvtColor(gray_img, loop_match_img, cv::COLOR_GRAY2RGB);
 	        for(int i = 0; i< (int)matched_2d_cur.size(); i++)
 	        {
 	            cv::Point2f cur_pt = matched_2d_cur[i];
@@ -424,7 +435,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	    reduceVector(matched_2d_old_norm, status);
 	    reduceVector(matched_3d, status);
 	    reduceVector(matched_id, status);
-	    #if 1
+	    #if 0
 	    	if (DEBUG_IMAGE)
 	        {
 	        	int gap = 10;
@@ -433,7 +444,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	            cv::Mat old_img = old_kf->image;
 	            cv::hconcat(image, gap_image, gap_image);
 	            cv::hconcat(gap_image, old_img, gray_img);
-	            cvtColor(gray_img, loop_match_img, CV_GRAY2RGB);
+	            cvtColor(gray_img, loop_match_img, cv::COLOR_GRAY2RGB);
 	            for(int i = 0; i< (int)matched_2d_cur.size(); i++)
 	            {
 	                cv::Point2f cur_pt = matched_2d_cur[i];
@@ -485,7 +496,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	    relative_t = PnP_R_old.transpose() * (origin_vio_T - PnP_T_old);
 	    relative_q = PnP_R_old.transpose() * origin_vio_R;
 	    relative_yaw = Utility::normalizeAngle(Utility::R2ypr(origin_vio_R).x() - Utility::R2ypr(PnP_R_old).x());
-	    //printf("PNP relative\n");
+	    //std::cout << "PNP relative" << std::endl;
 	    //cout << "pnp relative_t " << relative_t.transpose() << endl;
 	    //cout << "pnp relative_yaw " << relative_yaw << endl;
 	    if (abs(relative_yaw) < 30.0 && relative_t.norm() < 20.0)
@@ -501,7 +512,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	        return true;
 	    }
 	}
-	//printf("loop final use num %d %lf--------------- \n", (int)matched_2d_cur.size(), t_match.toc());
+	//std::cout << "loop final use num " << matched_2d_cur.size() << " " << t_match.toc() << std::endl;
 	return false;
 }
 
@@ -558,7 +569,7 @@ void KeyFrame::updateLoop(Eigen::Matrix<double, 8, 1 > &_loop_info)
 {
 	if (abs(_loop_info(7)) < 30.0 && Vector3d(_loop_info(0), _loop_info(1), _loop_info(2)).norm() < 20.0)
 	{
-		//printf("update loop info\n");
+		//std::cout << "update loop info" << std::endl;
 		loop_info = _loop_info;
 	}
 }

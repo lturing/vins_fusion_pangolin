@@ -1,4 +1,4 @@
-#include "camodocal/camera_models/ScaramuzzaCamera.h"
+#include "ScaramuzzaCamera.h"
 
 #include <cmath>
 #include <cstdio>
@@ -12,7 +12,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include "camodocal/gpl/gpl.h"
+#include "gpl.h"
 
 
 Eigen::VectorXd polyfit(Eigen::VectorXd& xVec, Eigen::VectorXd& yVec, int poly_order) {
@@ -290,7 +290,7 @@ OCAMCamera::estimateIntrinsics(const cv::Size& boardSize,
         const double sr32_squared_1 = (- (CC-BB) + sqrt(square(CC-BB) + 4.0 * AA)) / 2.0;
         const double sr32_squared_2 = (- (CC-BB) - sqrt(square(CC-BB) + 4.0 * AA)) / 2.0;
 
-// printf("rst = %.12f\n", sr32_squared_1*sr32_squared_1 + (CC-BB)*sr32_squared_1 - AA);
+        // std::cout << "rst = " << sr32_squared_1*sr32_squared_1 + (CC-BB)*sr32_squared_1 - AA << std::endl;
 
         std::vector<double> sr32_squared_values;
         if (sr32_squared_1 > 0) sr32_squared_values.push_back(sr32_squared_1);
@@ -421,7 +421,7 @@ OCAMCamera::estimateIntrinsics(const cv::Size& boardSize,
             }
         }
 
-        // printf("H_candidates.size()=%zu\n", H_candidates.size());
+        // std::cout << "H_candidates.size()=" << H_candidates.size() << std::endl;
         assert(H_candidates.size()==1);
 
         Eigen::Matrix3d& H = H_candidates.front();

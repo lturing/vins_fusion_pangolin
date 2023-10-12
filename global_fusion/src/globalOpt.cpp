@@ -33,8 +33,8 @@ void GlobalOptimization::GPS2XYZ(double latitude, double longitude, double altit
         initGPS = true;
     }
     geoConverter.Forward(latitude, longitude, altitude, xyz[0], xyz[1], xyz[2]);
-    //printf("la: %f lo: %f al: %f\n", latitude, longitude, altitude);
-    //printf("gps x: %f y: %f z: %f\n", xyz[0], xyz[1], xyz[2]);
+    //std::cout << "la: " << latitude << " lo: %f" <<  longitude << " al: " << altitude << std::endl;
+    //std::cout << "gps x: " << xyz[0] << " y: " << xyz[1] << " z: " << xyz[2] << std::endl;
 }
 
 void GlobalOptimization::inputOdom(double t, Eigen::Vector3d OdomP, Eigen::Quaterniond OdomQ)
@@ -81,7 +81,7 @@ void GlobalOptimization::inputGPS(double t, double latitude, double longitude, d
 	double xyz[3];
 	GPS2XYZ(latitude, longitude, altitude, xyz);
 	vector<double> tmp{xyz[0], xyz[1], xyz[2], posAccuracy};
-    //printf("new gps: t: %f x: %f y: %f z:%f \n", t, tmp[0], tmp[1], tmp[2]);
+    //std::cout << "new gps: t:  x: " << tmp[0] <<  " y: " << tmp[1] << " z: " << tmp[2] << std::endl;
 	GPSPositionMap[t] = tmp;
     newGPS = true;
 
@@ -94,7 +94,7 @@ void GlobalOptimization::optimize()
         if(newGPS)
         {
             newGPS = false;
-            printf("global optimization\n");
+            std::cout << "global optimization" << std::endl;
             TicToc globalOptimizationTime;
 
             ceres::Problem problem;
@@ -191,7 +191,7 @@ void GlobalOptimization::optimize()
                 {
                     ceres::CostFunction* gps_function = TError::Create(iterGPS->second[0], iterGPS->second[1], 
                                                                        iterGPS->second[2], iterGPS->second[3]);
-                    //printf("inverse weight %f \n", iterGPS->second[3]);
+                    //std::cout << "inverse weight " << iterGPS->second[3] << std::endl;
                     problem.AddResidualBlock(gps_function, loss_function, t_array[i]);
 
                     /*
@@ -238,7 +238,7 @@ void GlobalOptimization::optimize()
             	}
             }
             updateGlobalPath();
-            //printf("global time %f \n", globalOptimizationTime.toc());
+            //std::cout << "global time " << globalOptimizationTime.toc() << std::endl;
             mPoseMap.unlock();
         }
         std::chrono::milliseconds dura(2000);

@@ -9,14 +9,14 @@
 
 #pragma once
 
-#include <ros/ros.h>
 #include <vector>
 #include <eigen3/Eigen/Dense>
-#include "../utility/utility.h"
+#include "utility.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
 #include <fstream>
 #include <map>
+#include<iostream>
 
 using namespace std;
 
@@ -43,6 +43,7 @@ extern int NUM_ITERATIONS;
 extern std::string EX_CALIB_RESULT_PATH;
 extern std::string VINS_RESULT_PATH;
 extern std::string OUTPUT_FOLDER;
+extern std::string POSE_GRAPH_SAVE_PATH;
 extern std::string IMU_TOPIC;
 extern double TD;
 extern int ESTIMATE_TD;
@@ -63,6 +64,8 @@ extern int MIN_DIST;
 extern double F_THRESHOLD;
 extern int SHOW_TRACK;
 extern int FLOW_BACK;
+
+extern string BRIEF_PATTERN_FILE;
 
 void readParameters(std::string config_file);
 

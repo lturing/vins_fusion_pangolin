@@ -1,4 +1,4 @@
-#include "camodocal/calib/CameraCalibration.h"
+#include "CameraCalibration.h"
 
 #include <cstdio>
 #include <eigen3/Eigen/Dense>
@@ -11,11 +11,11 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
-#include "camodocal/camera_models/CameraFactory.h"
-#include "camodocal/sparse_graph/Transform.h"
-#include "camodocal/gpl/EigenQuaternionParameterization.h"
-#include "camodocal/gpl/EigenUtils.h"
-#include "camodocal/camera_models/CostFunctionFactory.h"
+#include "CameraFactory.h"
+#include "Transform.h"
+#include "EigenQuaternionParameterization.h"
+#include "EigenUtils.h"
+#include "CostFunctionFactory.h"
 
 #include "ceres/ceres.h"
 namespace camodocal
@@ -232,7 +232,7 @@ CameraCalibration::drawResults(std::vector<cv::Mat>& images) const
         cv::Mat& image = images.at(i);
         if (image.channels() == 1)
         {
-            cv::cvtColor(image, image, CV_GRAY2RGB);
+            cv::cvtColor(image, image, cv::COLOR_GRAY2RGB);
         }
 
         std::vector<cv::Point2f> estImagePoints;

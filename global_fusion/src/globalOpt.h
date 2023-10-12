@@ -20,6 +20,7 @@
 #include <ceres/ceres.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
+#include<iostream>
 #include "LocalCartesian.hpp"
 #include "tic_toc.h"
 

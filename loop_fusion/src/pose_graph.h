@@ -20,20 +20,22 @@
 #include <ceres/rotation.h>
 #include <queue>
 #include <assert.h>
-#include <nav_msgs/Path.h>
-#include <geometry_msgs/PointStamped.h>
-#include <nav_msgs/Odometry.h>
 #include <stdio.h>
-#include <ros/ros.h>
+
 #include "keyframe.h"
-#include "utility/tic_toc.h"
-#include "utility/utility.h"
-#include "utility/CameraPoseVisualization.h"
-#include "utility/tic_toc.h"
-#include "ThirdParty/DBoW/DBoW2.h"
-#include "ThirdParty/DVision/DVision.h"
-#include "ThirdParty/DBoW/TemplatedDatabase.h"
-#include "ThirdParty/DBoW/TemplatedVocabulary.h"
+#include "tic_toc.h"
+#include "utility.h"
+
+#include "CameraFactory.h"
+#include "CataCamera.h"
+#include "PinholeCamera.h"
+#include "parameters.h"
+#include "viewer.h"
+
+#include "ThirdParty/DBoW/DBoW/DBoW2.h"
+#include "ThirdParty/DBoW/DVision/DVision.h"
+#include "ThirdParty/DBoW/DBoW/TemplatedDatabase.h"
+#include "ThirdParty/DBoW/DBoW/TemplatedVocabulary.h"
 
 
 #define SHOW_S_EDGE false
@@ -48,32 +50,30 @@ class PoseGraph
 public:
 	PoseGraph();
 	~PoseGraph();
-	void registerPub(ros::NodeHandle &n);
 	void addKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop);
 	void loadKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop);
 	void loadVocabulary(std::string voc_path);
 	void setIMUFlag(bool _use_imu);
 	KeyFrame* getKeyFrame(int index);
-	nav_msgs::Path path[10];
-	nav_msgs::Path base_path;
-	CameraPoseVisualization* posegraph_visualization;
+    //void setCamera(camodocal::CameraPtr camera) { m_camera = camera;}
 	void savePoseGraph();
-	void loadPoseGraph();
-	void publish();
+	//void loadPoseGraph();
 	Vector3d t_drift;
 	double yaw_drift;
 	Matrix3d r_drift;
 	// world frame( base sequence or first sequence)<----> cur sequence frame  
 	Vector3d w_t_vio;
 	Matrix3d w_r_vio;
-
+    camodocal::CameraPtr m_camera;
+    void shutdown() { is_running = false;};
+    bool is_optimize_buf_empty() {return optimize_buf.empty();};
+    void setViewer(boost::shared_ptr< PangolinDSOViewer > viewer) {myViewer = viewer;};
 
 private:
 	int detectLoop(KeyFrame* keyframe, int frame_index);
 	void addKeyFrameIntoVoc(KeyFrame* keyframe);
 	void optimize4DoF();
 	void optimize6DoF();
-	void updatePath();
 	list<KeyFrame*> keyframelist;
 	std::mutex m_keyframelist;
 	std::mutex m_optimize_buf;
@@ -92,11 +92,10 @@ private:
 
 	BriefDatabase db;
 	BriefVocabulary* voc;
+    //camodocal::CameraPtr m_camera;
+    bool is_running;
+    boost::shared_ptr< PangolinDSOViewer > myViewer;
 
-	ros::Publisher pub_pg_path;
-	ros::Publisher pub_base_path;
-	ros::Publisher pub_pose_graph;
-	ros::Publisher pub_path[10];
 };
 
 template <typename T> inline

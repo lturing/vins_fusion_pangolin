@@ -9,15 +9,13 @@
 
 #pragma once
 
-#include <ros/ros.h>
-#include <ros/console.h>
 #include <cstdlib>
 #include <pthread.h>
 #include <ceres/ceres.h>
 #include <unordered_map>
 
-#include "../utility/utility.h"
-#include "../utility/tic_toc.h"
+#include "utility.h"
+#include "tic_toc.h"
 
 const int NUM_THREADS = 4;
 

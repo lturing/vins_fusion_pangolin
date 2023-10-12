@@ -86,12 +86,12 @@ void sync_process()
                 if(time0 < time1 - 0.003)
                 {
                     img0_buf.pop();
-                    printf("throw img0\n");
+                    std::cout << "throw img0" << std::endl;
                 }
                 else if(time0 > time1 + 0.003)
                 {
                     img1_buf.pop();
-                    printf("throw img1\n");
+                    std::cout << "throw img1" << std::endl;
                 }
                 else
                 {
@@ -101,7 +101,7 @@ void sync_process()
                     img0_buf.pop();
                     image1 = getImageFromMsg(img1_buf.front());
                     img1_buf.pop();
-                    //printf("find img0 and img1\n");
+                    //std::cout << "find img0 and img1" << std::endl;
                 }
             }
             m_buf.unlock();
@@ -168,7 +168,7 @@ void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg)
             double gy = feature_msg->channels[7].values[i];
             double gz = feature_msg->channels[8].values[i];
             pts_gt[feature_id] = Eigen::Vector3d(gx, gy, gz);
-            //printf("receive pts gt %d %f %f %f\n", feature_id, gx, gy, gz);
+            //std::cout << "receive pts gt " << feature_id << " " << gx << " " << gy << " " << gz << std::endl;
         }
         ROS_ASSERT(z == 1);
         Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
@@ -229,14 +229,14 @@ int main(int argc, char **argv)
 
     if(argc != 2)
     {
-        printf("please intput: rosrun vins vins_node [config file] \n"
-               "for example: rosrun vins vins_node "
-               "~/catkin_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml \n");
+        std::cout << "please intput: rosrun vins vins_node [config file] \n"
+                    "for example: rosrun vins vins_node "
+                    "~/catkin_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml" << std::endl;
         return 1;
     }
 
     string config_file = argv[1];
-    printf("config_file: %s\n", argv[1]);
+    std::cout << "config_file: " << argv[1] << std::endl;
 
     readParameters(config_file);
     estimator.setParameter();

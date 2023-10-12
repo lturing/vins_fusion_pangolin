@@ -5,6 +5,7 @@
 #include <eigen3/Eigen/Dense>
 #include <opencv2/core/core.hpp>
 #include <vector>
+#include<iostream>
 
 namespace camodocal
 {

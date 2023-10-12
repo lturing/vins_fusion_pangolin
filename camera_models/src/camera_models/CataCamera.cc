@@ -1,4 +1,4 @@
-#include "camodocal/camera_models/CataCamera.h"
+#include "CataCamera.h"
 
 #include <cmath>
 #include <cstdio>
@@ -9,7 +9,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "camodocal/gpl/gpl.h"
+#include "gpl.h"
 
 namespace camodocal
 {

@@ -39,17 +39,17 @@ int main(int argc, char** argv)
 
 	if(argc != 3)
 	{
-		printf("please intput: rosrun vins kitti_odom_test [config file] [data folder] \n"
-			   "for example: rosrun vins kitti_odom_test "
-			   "~/catkin_ws/src/VINS-Fusion/config/kitti_odom/kitti_config00-02.yaml "
-			   "/media/tony-ws1/disk_D/kitti/odometry/sequences/00/ \n");
+		std::cout << "please intput: rosrun vins kitti_odom_test [config file] [data folder] \n"
+			      << "for example: rosrun vins kitti_odom_test "
+			      << "~/catkin_ws/src/VINS-Fusion/config/kitti_odom/kitti_config00-02.yaml "
+			      << "/media/tony-ws1/disk_D/kitti/odometry/sequences/00/" << std::endl;
 		return 1;
 	}
 
 	string config_file = argv[1];
-	printf("config_file: %s\n", argv[1]);
+	std::cout << "config_file: " << argv[1] << std::endl;
 	string sequence = argv[2];
-	printf("read sequence: %s\n", argv[2]);
+	std::cout << "read sequence: " << argv[2]);
 	string dataPath = sequence + "/";
 
 	readParameters(config_file);
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 	FILE* file;
 	file = std::fopen((dataPath + "times.txt").c_str() , "r");
 	if(file == NULL){
-	    printf("cannot find file: %stimes.txt\n", dataPath.c_str());
+	    std::cout << "cannot find file: " << dataPath << "times.txt" << std::endl;
 	    ROS_BREAK();
 	    return 0;          
 	}
@@ -77,20 +77,18 @@ int main(int argc, char** argv)
 	FILE* outFile;
 	outFile = fopen((OUTPUT_FOLDER + "/vio.txt").c_str(),"w");
 	if(outFile == NULL)
-		printf("Output path dosen't exist: %s\n", OUTPUT_FOLDER.c_str());
+		std::cout << "Output path dosen't exist: " << OUTPUT_FOLDER << std::endl;
 
 	for (size_t i = 0; i < imageTimeList.size(); i++)
 	{	
 		if(ros::ok())
 		{
-			printf("\nprocess image %d\n", (int)i);
+			std::cout << "process image: " << i < std::endl;
 			stringstream ss;
 			ss << setfill('0') << setw(6) << i;
 			leftImagePath = dataPath + "image_0/" + ss.str() + ".png";
 			rightImagePath = dataPath + "image_1/" + ss.str() + ".png";
-			//printf("%lu  %f \n", i, imageTimeList[i]);
-			//printf("%s\n", leftImagePath.c_str() );
-			//printf("%s\n", rightImagePath.c_str() );
+			//std::cout << i << ", " << imageTimeList[i] << std::endl;
 
 			imLeft = cv::imread(leftImagePath, CV_LOAD_IMAGE_GRAYSCALE );
 			sensor_msgs::ImagePtr imLeftMsg = cv_bridge::CvImage(std_msgs::Header(), "mono8", imLeft).toImageMsg();

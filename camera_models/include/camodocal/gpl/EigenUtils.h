@@ -4,7 +4,7 @@
 #include <eigen3/Eigen/Dense>
 
 #include "ceres/rotation.h"
-#include "camodocal/gpl/gpl.h"
+#include "gpl.h"
 
 namespace camodocal
 {

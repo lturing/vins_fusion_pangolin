@@ -15,14 +15,14 @@
 #include <eigen3/Eigen/Dense>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
-#include "camodocal/camera_models/CameraFactory.h"
-#include "camodocal/camera_models/CataCamera.h"
-#include "camodocal/camera_models/PinholeCamera.h"
-#include "utility/tic_toc.h"
-#include "utility/utility.h"
+#include "CameraFactory.h"
+#include "CataCamera.h"
+#include "PinholeCamera.h"
+#include "tic_toc.h"
+#include "utility.h"
 #include "parameters.h"
-#include "ThirdParty/DBoW/DBoW2.h"
-#include "ThirdParty/DVision/DVision.h"
+#include "ThirdParty/DBoW/DBoW/DBoW2.h"
+#include "ThirdParty/DBoW/DVision/DVision.h"
 
 #define MIN_LOOP_NUM 25
 
@@ -43,10 +43,10 @@ public:
 class KeyFrame
 {
 public:
-	KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, cv::Mat &_image,
-			 vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d_uv, vector<cv::Point2f> &_point_2d_normal, 
-			 vector<double> &_point_id, int _sequence);
-	KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_T_w_i, Matrix3d &_R_w_i,
+	KeyFrame(camodocal::CameraPtr _camera, Eigen::Matrix3d _qic, Eigen::Vector3d _tic, double _time_stamp, int _index, Vector3d _vio_T_w_i, Matrix3d _vio_R_w_i, cv::Mat _image, cv::Mat _image_result, 
+			 vector<cv::Point3f> _point_3d, vector<cv::Point2f> _point_2d_uv, vector<cv::Point2f> _point_2d_normal, 
+			 vector<double> _point_id, int _sequence);
+	KeyFrame(camodocal::CameraPtr _camera, Eigen::Matrix3d _qic, Eigen::Vector3d _tic, double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_T_w_i, Matrix3d &_R_w_i,
 			 cv::Mat &_image, int _loop_index, Eigen::Matrix<double, 8, 1 > &_loop_info,
 			 vector<cv::KeyPoint> &_keypoints, vector<cv::KeyPoint> &_keypoints_norm, vector<BRIEF::bitset> &_brief_descriptors);
 	bool findConnection(KeyFrame* old_kf);
@@ -82,9 +82,8 @@ public:
 	Eigen::Vector3d getLoopRelativeT();
 	double getLoopRelativeYaw();
 	Eigen::Quaterniond getLoopRelativeQ();
-
-
-
+    void computeBRIEF();
+    
 	double time_stamp; 
 	int index;
 	int local_index;
@@ -95,6 +94,7 @@ public:
 	Eigen::Vector3d origin_vio_T;		
 	Eigen::Matrix3d origin_vio_R;
 	cv::Mat image;
+    cv::Mat image_result;
 	cv::Mat thumbnail;
 	vector<cv::Point3f> point_3d; 
 	vector<cv::Point2f> point_2d_uv;
@@ -111,5 +111,9 @@ public:
 	bool has_loop;
 	int loop_index;
 	Eigen::Matrix<double, 8, 1 > loop_info;
+    camodocal::CameraPtr m_camera;
+    Eigen::Vector3d tic;
+    Eigen::Matrix3d qic;
+
 };
 

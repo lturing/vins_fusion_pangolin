@@ -72,7 +72,7 @@ void publish_car_model(double t, Eigen::Vector3d t_w_car, Eigen::Quaterniond q_w
 
 void GPS_callback(const sensor_msgs::NavSatFixConstPtr &GPS_msg)
 {
-    //printf("gps_callback! \n");
+    //std::cout << "gps_callback!" << std::endl;
     m_buf.lock();
     gpsQueue.push(GPS_msg);
     m_buf.unlock();
@@ -80,7 +80,7 @@ void GPS_callback(const sensor_msgs::NavSatFixConstPtr &GPS_msg)
 
 void vio_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
 {
-    //printf("vio_callback! \n");
+    //std::cout << "vio_callback!" << std::endl;
     double t = pose_msg->header.stamp.toSec();
     last_vio_t = t;
     Eigen::Vector3d vio_t(pose_msg->pose.pose.position.x, pose_msg->pose.pose.position.y, pose_msg->pose.pose.position.z);
@@ -97,11 +97,11 @@ void vio_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
     {
         sensor_msgs::NavSatFixConstPtr GPS_msg = gpsQueue.front();
         double gps_t = GPS_msg->header.stamp.toSec();
-        printf("vio t: %f, gps t: %f \n", t, gps_t);
+        std::cout << "vio t: " << t << " gps t: " << gps_t << std::endl;
         // 10ms sync tolerance
         if(gps_t >= t - 0.01 && gps_t <= t + 0.01)
         {
-            //printf("receive GPS with timestamp %f\n", GPS_msg->header.stamp.toSec());
+            //std::cout << "receive GPS with timestamp " << GPS_msg->header.stamp.toSec() << std::endl;
             double latitude = GPS_msg->latitude;
             double longitude = GPS_msg->longitude;
             double altitude = GPS_msg->altitude;
@@ -109,7 +109,7 @@ void vio_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
             double pos_accuracy = GPS_msg->position_covariance[0];
             if(pos_accuracy <= 0)
                 pos_accuracy = 1;
-            //printf("receive covariance %lf \n", pos_accuracy);
+            //std::cout << "receive covariance " << pos_accuracy << std::endl;
             //if(GPS_msg->status.status > 8)
                 globalEstimator.inputGPS(t, latitude, longitude, altitude, pos_accuracy);
             gpsQueue.pop();

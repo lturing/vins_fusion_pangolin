@@ -8,6 +8,7 @@
  *******************************************************/
 
 #include "feature_manager.h"
+#include <assert.h>
 
 int FeaturePerId::endFrame()
 {
@@ -51,8 +52,7 @@ int FeatureManager::getFeatureCount()
 
 bool FeatureManager::addFeatureCheckParallax(int frame_count, const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, double td)
 {
-    ROS_DEBUG("input feature: %d", (int)image.size());
-    ROS_DEBUG("num of feature: %d", getFeatureCount());
+    std::cout << "input feature: " <<  (int)image.size() << " num of feature: " << getFeatureCount() << std::endl;
     double parallax_sum = 0;
     int parallax_num = 0;
     last_track_num = 0;
@@ -111,8 +111,7 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count, const map<int, vec
     }
     else
     {
-        ROS_DEBUG("parallax_sum: %lf, parallax_num: %d", parallax_sum, parallax_num);
-        ROS_DEBUG("current parallax: %lf", parallax_sum / parallax_num * FOCAL_LENGTH);
+        std::cout << "parallax_sum: " << parallax_sum << ", parallax_num: " << parallax_num << ", current parallax: " << parallax_sum / parallax_num * FOCAL_LENGTH << std::endl;
         last_average_parallax = parallax_sum / parallax_num * FOCAL_LENGTH;
         return parallax_sum / parallax_num >= MIN_PARALLAX;
     }
@@ -149,7 +148,7 @@ void FeatureManager::setDepth(const VectorXd &x)
             continue;
 
         it_per_id.estimated_depth = 1.0 / x(++feature_index);
-        //ROS_INFO("feature id %d , start_frame %d, depth %f ", it_per_id->feature_id, it_per_id-> start_frame, it_per_id->estimated_depth);
+        //std::cout << "feature id " << it_per_id->feature_id << " , start_frame " << it_per_id-> start_frame << ", depth " << it_per_id->estimated_depth << std::endl;
         if (it_per_id.estimated_depth < 0)
         {
             it_per_id.solve_flag = 2;
@@ -222,10 +221,10 @@ bool FeatureManager::solvePoseByPnP(Eigen::Matrix3d &R, Eigen::Vector3d &P,
     R_initial = R.inverse();
     P_initial = -(R_initial * P);
 
-    //printf("pnp size %d \n",(int)pts2D.size() );
+    //std::cout << "pnp size " << (int)pts2D.size() << std::endl;
     if (int(pts2D.size()) < 4)
     {
-        printf("feature tracking not enough, please slowly move you device! \n");
+        std::cout << "feature tracking not enough, please slowly move you device!" << std::endl;
         return false;
     }
     cv::Mat r, rvec, t, D, tmp_r;
@@ -239,7 +238,7 @@ bool FeatureManager::solvePoseByPnP(Eigen::Matrix3d &R, Eigen::Vector3d &P,
 
     if(!pnp_succ)
     {
-        printf("pnp failed ! \n");
+        std::cout << "pnp failed !" << std::endl;
         return false;
     }
     cv::Rodrigues(rvec, r);
@@ -340,8 +339,7 @@ void FeatureManager::triangulate(int frameCnt, Vector3d Ps[], Matrix3d Rs[], Vec
                 it_per_id.estimated_depth = INIT_DEPTH;
             /*
             Vector3d ptsGt = pts_gt[it_per_id.feature_id];
-            printf("stereo %d pts: %f %f %f gt: %f %f %f \n",it_per_id.feature_id, point3d.x(), point3d.y(), point3d.z(),
-                                                            ptsGt.x(), ptsGt.y(), ptsGt.z());
+            std::cout << "stereo " << it_per_id.feature_id << " pts: " << point3d.x() << " " << point3d.y() << " " << point3d.z()  << " gt: " << ptsGt.x() << " " << ptsGt.y() << " " << ptsGt.z() << std::endl;
             */
             continue;
         }
@@ -375,8 +373,7 @@ void FeatureManager::triangulate(int frameCnt, Vector3d Ps[], Matrix3d Rs[], Vec
                 it_per_id.estimated_depth = INIT_DEPTH;
             /*
             Vector3d ptsGt = pts_gt[it_per_id.feature_id];
-            printf("motion  %d pts: %f %f %f gt: %f %f %f \n",it_per_id.feature_id, point3d.x(), point3d.y(), point3d.z(),
-                                                            ptsGt.x(), ptsGt.y(), ptsGt.z());
+            std::cout << "motion " << it_per_id.feature_id << " pts: " << point3d.x() << " " << point3d.y() << " " << point3d.z() << " gt: " << ptsGt.x() << " " << ptsGt.y() << " " << ptsGt.z() << std::endl;
             */
             continue;
         }
@@ -413,7 +410,7 @@ void FeatureManager::triangulate(int frameCnt, Vector3d Ps[], Matrix3d Rs[], Vec
             if (imu_i == imu_j)
                 continue;
         }
-        ROS_ASSERT(svd_idx == svd_A.rows());
+        assert(svd_idx == svd_A.rows());
         Eigen::Vector4d svd_V = Eigen::JacobiSVD<Eigen::MatrixXd>(svd_A, Eigen::ComputeThinV).matrixV().rightCols<1>();
         double svd_method = svd_V[2] / svd_V[3];
         //it_per_id->estimated_depth = -b / A;
@@ -442,7 +439,7 @@ void FeatureManager::removeOutlier(set<int> &outlierIndex)
         if(itSet != outlierIndex.end())
         {
             feature.erase(it);
-            //printf("remove outlier %d \n", index);
+            //std::cout << "remove outlier " << index << std::endl;
         }
     }
 }

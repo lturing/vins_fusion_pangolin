@@ -9,12 +9,11 @@
 
 #pragma once
 
-#include <ros/assert.h>
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
-#include "../utility/utility.h"
-#include "../utility/tic_toc.h"
-#include "../estimator/parameters.h"
+#include "utility.h"
+#include "tic_toc.h"
+#include "parameters.h"
 
 class ProjectionFactor : public ceres::SizedCostFunction<2, 7, 7, 7, 1>
 {

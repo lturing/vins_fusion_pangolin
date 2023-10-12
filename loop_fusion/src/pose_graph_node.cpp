@@ -75,9 +75,9 @@ ros::Publisher pub_point_cloud, pub_margin_cloud;
 
 void new_sequence()
 {
-    printf("new sequence\n");
+    std::cout << "new sequence" << std::endl;
     sequence++;
-    printf("sequence cnt %d \n", sequence);
+    std::cout << "sequence cnt " << sequence << std::endl;
     if (sequence > 5)
     {
         ROS_WARN("only support 5 sequences since it's boring to copy code for more sequences.");
@@ -103,7 +103,7 @@ void image_callback(const sensor_msgs::ImageConstPtr &image_msg)
     m_buf.lock();
     image_buf.push(image_msg);
     m_buf.unlock();
-    //printf(" image time %f \n", image_msg->header.stamp.toSec());
+    //std::cout << "image time " << image_msg->header.stamp.toSec() << std::endl;
 
     // detect unstable camera stream
     if (last_image_time == -1)
@@ -125,11 +125,8 @@ void point_callback(const sensor_msgs::PointCloudConstPtr &point_msg)
     /*
     for (unsigned int i = 0; i < point_msg->points.size(); i++)
     {
-        printf("%d, 3D point: %f, %f, %f 2D point %f, %f \n",i , point_msg->points[i].x, 
-                                                     point_msg->points[i].y,
-                                                     point_msg->points[i].z,
-                                                     point_msg->channels[i].values[0],
-                                                     point_msg->channels[i].values[1]);
+        std::cout << i << " 3D point: " << point_msg->points[i].x << " " << point_msg->points[i].y << " " << point_msg->points[i].z 
+                        << " 2D point " << point_msg->channels[i].values[0] << " " << point_msg->channels[i].values[1] << std::endl;
     }
     */
     // for visualization
@@ -179,13 +176,13 @@ void pose_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
     pose_buf.push(pose_msg);
     m_buf.unlock();
     /*
-    printf("pose t: %f, %f, %f   q: %f, %f, %f %f \n", pose_msg->pose.pose.position.x,
-                                                       pose_msg->pose.pose.position.y,
-                                                       pose_msg->pose.pose.position.z,
-                                                       pose_msg->pose.pose.orientation.w,
-                                                       pose_msg->pose.pose.orientation.x,
-                                                       pose_msg->pose.pose.orientation.y,
-                                                       pose_msg->pose.pose.orientation.z);
+    std::cout << "pose t: " << pose_msg->pose.pose.position.x << " "  
+                            << pose_msg->pose.pose.position.y << " " 
+                            << pose_msg->pose.pose.position.z << " q: " 
+                            << pose_msg->pose.pose.orientation.w << " "
+                            << pose_msg->pose.pose.orientation.x << " "
+                            << pose_msg->pose.pose.orientation.y << " "
+                            << pose_msg->pose.pose.orientation.z << std::endl;
     */
 }
 
@@ -257,12 +254,12 @@ void process()
             if (image_buf.front()->header.stamp.toSec() > pose_buf.front()->header.stamp.toSec())
             {
                 pose_buf.pop();
-                printf("throw pose at beginning\n");
+                std::cout << "throw pose at beginning" << std::endl;
             }
             else if (image_buf.front()->header.stamp.toSec() > point_buf.front()->header.stamp.toSec())
             {
                 point_buf.pop();
-                printf("throw point at beginning\n");
+                std::cout << "throw point at beginning" << std::endl;
             }
             else if (image_buf.back()->header.stamp.toSec() >= pose_buf.front()->header.stamp.toSec() 
                 && point_buf.back()->header.stamp.toSec() >= pose_buf.front()->header.stamp.toSec())
@@ -286,9 +283,9 @@ void process()
 
         if (pose_msg != NULL)
         {
-            //printf(" pose time %f \n", pose_msg->header.stamp.toSec());
-            //printf(" point time %f \n", point_msg->header.stamp.toSec());
-            //printf(" image time %f \n", image_msg->header.stamp.toSec());
+            //std::cout << "pose time " << pose_msg->header.stamp.toSec() << std::endl;
+            //std::cout << "point time " << point_msg->header.stamp.toSec() << std::endl;
+            //std::cout << "image time " << image_msg->header.stamp.toSec() << std::endl;
             // skip fisrt few
             if (skip_first_cnt < SKIP_FIRST_CNT)
             {
@@ -357,7 +354,7 @@ void process()
                     point_2d_uv.push_back(p_2d_uv);
                     point_id.push_back(p_id);
 
-                    //printf("u %f, v %f \n", p_2d_uv.x, p_2d_uv.y);
+                    //std::cout << "u " << p_2d_uv.x << ", v " << p_2d_uv.y << std::endl;
                 }
 
                 KeyFrame* keyframe = new KeyFrame(pose_msg->header.stamp.toSec(), frame_index, T, R, image,
@@ -385,8 +382,8 @@ void command()
             m_process.lock();
             posegraph.savePoseGraph();
             m_process.unlock();
-            printf("save pose graph finish\nyou can set 'load_previous_pose_graph' to 1 in the config file to reuse it next time\n");
-            printf("program shutting down...\n");
+            std::cout << "save pose graph finish\nyou can set 'load_previous_pose_graph' to 1 in the config file to reuse it next time" << std::endl;
+            std::cout << "program shutting down..." << std::endl;
             ros::shutdown();
         }
         if (c == 'n')
@@ -410,14 +407,14 @@ int main(int argc, char **argv)
 
     if(argc != 2)
     {
-        printf("please intput: rosrun loop_fusion loop_fusion_node [config file] \n"
-               "for example: rosrun loop_fusion loop_fusion_node "
-               "/home/tony-ws1/catkin_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml \n");
+        std::cout << "please intput: rosrun loop_fusion loop_fusion_node [config file] \n" << 
+               "for example: rosrun loop_fusion loop_fusion_node " << 
+               "/home/tony-ws1/catkin_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml " << std::endl;
         return 0;
     }
     
     string config_file = argv[1];
-    printf("config_file: %s\n", argv[1]);
+    std::cout << "config_file: " << argv[1] << std::endl;
 
     cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
     if(!fsSettings.isOpened())
@@ -446,7 +443,7 @@ int main(int argc, char **argv)
     std::string cam0Calib;
     fsSettings["cam0_calib"] >> cam0Calib;
     std::string cam0Path = configPath + "/" + cam0Calib;
-    printf("cam calib path: %s\n", cam0Path.c_str());
+    std::cout << "cam calib path: " << cam0Path.c_str() << std::endl;
     m_camera = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(cam0Path.c_str());
 
     fsSettings["image0_topic"] >> IMAGE_TOPIC;        
@@ -465,16 +462,16 @@ int main(int argc, char **argv)
 
     if (LOAD_PREVIOUS_POSE_GRAPH)
     {
-        printf("load pose graph\n");
+        std::cout << "load pose graph" << std::endl;
         m_process.lock();
         posegraph.loadPoseGraph();
         m_process.unlock();
-        printf("load pose graph finish\n");
+        std::cout << "load pose graph finish" << std::endl;
         load_flag = 1;
     }
     else
     {
-        printf("no previous pose graph\n");
+        std::cout << "no previous pose graph" << std::endl;
         load_flag = 1;
     }
 
