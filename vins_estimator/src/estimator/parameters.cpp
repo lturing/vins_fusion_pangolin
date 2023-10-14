@@ -182,8 +182,8 @@ void readParameters(std::string config_file)
         std::cout << "no imu, fix extrinsic param; no time offset calibration\n" << std::endl;
     }
 
-    //BRIEF_PATTERN_FILE = "./support_files/brief_pattern.yml";
-    BRIEF_PATTERN_FILE = "/home/spurs/x/VINS-Fusion/support_files/brief_pattern.yml";
+    BRIEF_PATTERN_FILE = "./support_files/brief_pattern.yml";
+    //BRIEF_PATTERN_FILE = "/home/spurs/x/VINS-Fusion/support_files/brief_pattern.yml";
     
     fsSettings.release();
 }
