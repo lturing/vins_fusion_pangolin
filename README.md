@@ -1,3 +1,31 @@
+
+vins-fusion的非ros版，保留回环检测和pangolin可视化
+
+# run 
+```
+git clone https://github.com/lturing/vins_fusion_pangolin
+
+cd vins_fusion_pangolin
+mkdir build && cd build
+cmake .. && make -j12
+cd ..
+
+# run stereo on kitti00 
+./examples/stereo_kitti support_files/brief_k10L6.bin  config/kitti_odom/kitti_config00-02.yaml /home/spurs/dataset/kitti_00
+
+# the result will be saved in output directory
+```
+
+# demo 
+- [b站demo1](https://www.bilibili.com/video/BV11u4y1W7eK)
+
+<div align=center><img src="support_files/image/vins_fusion_1.jpg" width="90%"/></div>
+
+<br>
+
+<details>
+  <summary><strong>offical readme</strong>(click to expand)</summary>
+
 # VINS-Fusion
 ## An optimization-based multi-sensor state estimator
 
@@ -174,3 +202,5 @@ The source code is released under [GPLv3](http://www.gnu.org/licenses/) license.
 We are still working on improving the code reliability. For any technical issues, please contact Tong Qin <qintonguavATgmail.com>.
 
 For commercial inquiries, please contact Shaojie Shen <eeshaojieATust.hk>.
+
+</details>

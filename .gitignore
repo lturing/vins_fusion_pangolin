@@ -20,4 +20,5 @@ lib/*
 build/*
 ThirdParty/DBoW/build/*
 ThirdParty/DBoW/lib/*
+examples/stereo_kitti
 
