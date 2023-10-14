@@ -24,9 +24,13 @@ cd ..
 ```
 
 # demo 
-- [b站demo1](https://www.bilibili.com/video/BV11u4y1W7eK)
+- [b站视频1](https://www.bilibili.com/video/BV11u4y1W7eK)
+- [b站视频2](https://www.bilibili.com/video/BV1M34y1g79m)
 
 <div align=center><img src="support_files/image/vins_fusion_1.jpg" width="90%"/></div>
+
+<br>
+<div align=center><img src="support_files/image/vins_fusion_2.jpg" width="90%"/></div>
 
 <br>
 
