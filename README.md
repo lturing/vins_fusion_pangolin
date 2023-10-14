@@ -6,6 +6,13 @@ vins-fusion的非ros版，保留回环检测和pangolin可视化
 git clone https://github.com/lturing/vins_fusion_pangolin
 
 cd vins_fusion_pangolin
+# build DBow
+cd ThirdParty/DBoW
+mkdir build && cd build 
+cmake .. && make -j12
+
+cd ./../../../
+
 mkdir build && cd build
 cmake .. && make -j12
 cd ..
