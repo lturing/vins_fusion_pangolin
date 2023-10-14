@@ -82,6 +82,10 @@ int main(int argc, char** argv)
     estimator.shutdown(); 
 	if(outFile != NULL)
 		fclose (outFile);
+    
+    std::cout << "please input any to quit: ";
+    std::cin.get();
+
 	return 0;
 }
 

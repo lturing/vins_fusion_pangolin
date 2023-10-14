@@ -161,33 +161,8 @@ void PangolinDSOViewer::join() {
     std::cout << "JOINED Pangolin thread!" << std::endl;
 }
 
-/*
-void PangolinDSOViewer::publishPointPoseFrame(OdomStatus& status) {
-    unique_lock<mutex> lk3d(model3DMutex);
-    auto points = status.kf.points();
-    float max_depth = 100.;
 
-    for (int gr = 0; gr < points.rows(); ++gr) {
-        for (int gc = 0; gc < points.cols(); ++gc) {
-            const auto& point = points.at(gr, gc);
-            // Only draw points with max info and within max depth
-            if (!point.InfoMax() || (1.0 / point.idepth()) > max_depth) {
-                continue;
-            }
-            if (point.PixelOk() && point.DepthOk())
-            {
-                // transform to fixed frame
-                Eigen::Vector3f p_w = (status.kf.Twc() * point.pt()).cast<float>();
-                mapPoints.push_back(p_w);
-            }
-        }
-    }
-    allFramePoses.push_back(status.kf.Twc().cast<float>());
-    frame = status.frame_left.clone();
-}
-*/
-
-void PangolinDSOViewer::publishPointPoseFrame(vector<Sophus::SE3f>& trajs, cv::Mat& _frame)
+void PangolinDSOViewer::publishPointPoseFrame(vector<Sophus::SE3f>& trajs, std::vector<Eigen::Vector3f>& points3d, cv::Mat& _frame)
 {
     unique_lock<mutex> lk3d(model3DMutex);
     allFramePoses.clear();
@@ -197,6 +172,12 @@ void PangolinDSOViewer::publishPointPoseFrame(vector<Sophus::SE3f>& trajs, cv::M
         allFramePoses.push_back(trajs[i]); 
     }
     //cv::cvtColor(_frame, frame, cv::COLOR_GRAY2BGR);
+    mapPoints.clear();
+    mapPoints.resize(points3d.size());
+    for (int i = 0; i < points3d.size(); i++)
+    {
+        mapPoints.push_back(points3d[i]);
+    }
     frame = _frame.clone();
 
 }

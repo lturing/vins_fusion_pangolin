@@ -23,6 +23,7 @@
 #include "parameters.h"
 #include "ThirdParty/DBoW/DBoW/DBoW2.h"
 #include "ThirdParty/DBoW/DVision/DVision.h"
+#include "feature_manager.h"
 
 #define MIN_LOOP_NUM 25
 
@@ -43,7 +44,7 @@ public:
 class KeyFrame
 {
 public:
-	KeyFrame(camodocal::CameraPtr _camera, Eigen::Matrix3d _qic, Eigen::Vector3d _tic, double _time_stamp, int _index, Vector3d _vio_T_w_i, Matrix3d _vio_R_w_i, cv::Mat _image, cv::Mat _image_result, 
+	KeyFrame(camodocal::CameraPtr _camera, Eigen::Matrix3d _qic, Eigen::Vector3d _tic, double _time_stamp, int _index, Vector3d _vio_T_w_i, Matrix3d _vio_R_w_i, cv::Mat _image, cv::Mat _image_result, vector<MapPoint> _points,  
 			 vector<cv::Point3f> _point_3d, vector<cv::Point2f> _point_2d_uv, vector<cv::Point2f> _point_2d_normal, 
 			 vector<double> _point_id, int _sequence);
 	KeyFrame(camodocal::CameraPtr _camera, Eigen::Matrix3d _qic, Eigen::Vector3d _tic, double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_T_w_i, Matrix3d &_R_w_i,
@@ -114,6 +115,7 @@ public:
     camodocal::CameraPtr m_camera;
     Eigen::Vector3d tic;
     Eigen::Matrix3d qic;
+    vector<MapPoint> point3ds;
 
 };
 

@@ -22,6 +22,21 @@ using namespace Eigen;
 #include "parameters.h"
 #include "tic_toc.h"
 
+class MapPoint
+{
+    public:
+        MapPoint(Vector3d _point, int _point_index, int _frame_index)
+        {
+            point3d_w = _point;
+            point_index = _point_index;
+            frame_index = _frame_index;
+        }
+
+        Vector3d point3d_w;
+        int point_index;
+        int frame_index;
+};
+
 class FeaturePerFrame
 {
   public:

@@ -223,6 +223,7 @@ void PoseGraph::addKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop)
 	keyframelist.push_back(cur_kf);
 
     vector<Sophus::SE3f> traj;
+    vector<Vector3f> points3d;
     traj.resize(keyframelist.size());
     for (auto it : keyframelist)
     {
@@ -230,8 +231,12 @@ void PoseGraph::addKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop)
         Matrix3d vio_R_cur = it->R_w_i;
         Eigen::Quaternionf q(vio_R_cur.cast<float>());
         traj.push_back(Sophus::SE3<float>(q, vio_P_cur.cast<float>()));
+        for (auto p : it->point3ds)
+        {
+            points3d.push_back((vio_R_cur * p.point3d_w + vio_P_cur).cast<float>());
+        }
     }
-    myViewer->publishPointPoseFrame(traj, cur_kf->image_result);
+    myViewer->publishPointPoseFrame(traj, points3d, cur_kf->image_result);
     if (0)
     {
         cv::namedWindow("image", cv::WINDOW_AUTOSIZE);

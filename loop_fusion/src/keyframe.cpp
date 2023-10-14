@@ -22,7 +22,7 @@ static void reduceVector(vector<Derived> &v, vector<uchar> status)
 }
 
 // create keyframe online
-KeyFrame::KeyFrame(camodocal::CameraPtr _camera, Eigen::Matrix3d _qic, Eigen::Vector3d _tic, double _time_stamp, int _index, Vector3d _vio_T_w_i, Matrix3d _vio_R_w_i, cv::Mat _image, cv::Mat _image_result, 
+KeyFrame::KeyFrame(camodocal::CameraPtr _camera, Eigen::Matrix3d _qic, Eigen::Vector3d _tic, double _time_stamp, int _index, Vector3d _vio_T_w_i, Matrix3d _vio_R_w_i, cv::Mat _image, cv::Mat _image_result, vector<MapPoint> _points, 
 		           vector<cv::Point3f> _point_3d, vector<cv::Point2f> _point_2d_uv, vector<cv::Point2f> _point_2d_norm,
 		           vector<double> _point_id, int _sequence)
 {
@@ -49,6 +49,7 @@ KeyFrame::KeyFrame(camodocal::CameraPtr _camera, Eigen::Matrix3d _qic, Eigen::Ve
 	has_fast_point = false;
 	loop_info << 0, 0, 0, 0, 0, 0, 0, 0;
 	sequence = _sequence;
+    point3ds = _points;
 
 	//if(!DEBUG_IMAGE)
 	//	image.release();

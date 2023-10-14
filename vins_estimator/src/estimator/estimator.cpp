@@ -379,13 +379,14 @@ void Estimator::processMeasurements()
                 double frame_time; // seconds
                 cv::Mat image;
                 cv::Mat image_result;
-                getPosePoints(vio_T_w_i, vio_R_w_i, point_3d, point_2d_uv, point_2d_normal, point_id, frame_time, image, image_result);
+                vector<MapPoint> point3d;
+                getPosePoints(frame_index, vio_T_w_i, vio_R_w_i, point_3d, point_2d_uv, point_2d_normal, point_id, frame_time, image, image_result, point3d);
                 int sequence = 1;
 
                 //std::cout << "point_3d.size()=" << point_3d.size() << ", point_2d_uv.size()=" << point_2d_uv.size() << ", point_2d_normal.size()=" << point_2d_normal.size() << std::endl;
                 if ((vio_T_w_i - last_t).norm() > SKIP_DIS)
                 {
-                    KeyFrame* keyframe = new KeyFrame(featureTracker.m_camera[0], ric[0], tic[0], frame_time, frame_index, vio_T_w_i, vio_R_w_i, image, image_result, 
+                    KeyFrame* keyframe = new KeyFrame(featureTracker.m_camera[0], ric[0], tic[0], frame_time, frame_index, vio_T_w_i, vio_R_w_i, image, image_result, point3d, 
                                         point_3d, point_2d_uv, point_2d_normal, point_id, sequence);
 
                     loop_graph->addKeyFrame(keyframe, 1);
@@ -408,7 +409,7 @@ void Estimator::processMeasurements()
     }
 }
 
-void Estimator::getPosePoints(Vector3d& vio_T_w_i, Matrix3d& vio_R_w_i, vector<cv::Point3f>& point_3d, vector<cv::Point2f>& point_2d_uv, vector<cv::Point2f>& point_2d_normal, vector<double>& point_id, double& frame_time, cv::Mat& image, cv::Mat& image_result)
+void Estimator::getPosePoints(int frame_index, Vector3d& vio_T_w_i, Matrix3d& vio_R_w_i, vector<cv::Point3f>& point_3d, vector<cv::Point2f>& point_2d_uv, vector<cv::Point2f>& point_2d_normal, vector<double>& point_id, double& frame_time, cv::Mat& image, cv::Mat& image_result, vector<MapPoint>& point3d)
 {
     int i = WINDOW_SIZE - 2;
     //Vector3d P = estimator.Ps[i] + estimator.Rs[i] * estimator.tic[0];
@@ -417,6 +418,11 @@ void Estimator::getPosePoints(Vector3d& vio_T_w_i, Matrix3d& vio_R_w_i, vector<c
     frame_time = Headers[i];
     image = Images[i].first;
     image_result = Images[i].second;
+
+    cv::Mat img1, img2;
+    cv::cvtColor(image, img1, cv::COLOR_GRAY2BGR);
+    img2 = img1.clone();
+
     for (auto &it_per_id : f_manager.feature)
     {
         int frame_size = it_per_id.feature_per_frame.size();
@@ -438,8 +444,33 @@ void Estimator::getPosePoints(Vector3d& vio_T_w_i, Matrix3d& vio_R_w_i, vector<c
             point_2d_normal.push_back(p_2d_normal);
             point_id.push_back(p_id);
 
+            int feat_id = it_per_id.feature_id;
+            if (seen_points.find(feat_id) == seen_points.end())
+            {
+                seen_points.emplace(feat_id);
+                MapPoint point = MapPoint(ric[0] * pts_i + tic[0], feat_id, frame_index);
+                point3d.push_back(point);
+            }
+
+            for (int i = 1; i < it_per_id.feature_per_frame.size(); i++)
+            {
+                cv::Point2f p1(it_per_id.feature_per_frame[i-1].uv.x(), it_per_id.feature_per_frame[i-1].uv.y());
+                cv::Point2f p2(it_per_id.feature_per_frame[i].uv.x(), it_per_id.feature_per_frame[i].uv.y());
+
+                size_t h = feat_id * 6364136223846793005u + 1442695040888963407;
+
+                cv::Scalar standardColor(h & 0xFF, (h >> 4) & 0xFF, (h >> 8) & 0xFF);
+                cv::line(img2, p1, p2, standardColor, 3);
+            }
+
+            cv::Scalar standardColor(0, 0, 255);
+            cv::circle(img1, p_2d_uv, 3, standardColor, 3);
+
         }
     }
+
+    cv::hconcat(img1, img2, image_result);
+
 }
 
 void Estimator::initFirstIMUPose(vector<pair<double, Eigen::Vector3d>> &accVector)

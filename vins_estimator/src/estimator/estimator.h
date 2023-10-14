@@ -14,6 +14,7 @@
 #include <ceres/ceres.h>
 #include <unordered_map>
 #include <queue>
+#include <set> 
 #include <opencv2/core/eigen.hpp>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
@@ -81,7 +82,7 @@ class Estimator
     bool IMUAvailable(double t);
     void initFirstIMUPose(vector<pair<double, Eigen::Vector3d>> &accVector);
 
-    void getPosePoints(Vector3d& vio_T_w_i, Matrix3d& vio_R_w_i, vector<cv::Point3f>& point_3d, vector<cv::Point2f>& point_2d_uv, vector<cv::Point2f>& point_2d_normal, vector<double>& point_id, double& frame_time, cv::Mat& image, cv::Mat& image_result);
+    void getPosePoints(int frame_index, Vector3d& vio_T_w_i, Matrix3d& vio_R_w_i, vector<cv::Point3f>& point_3d, vector<cv::Point2f>& point_2d_uv, vector<cv::Point2f>& point_2d_normal, vector<double>& point_id, double& frame_time, cv::Mat& image, cv::Mat& image_result, vector<MapPoint>& point3d);
 
     void shutdown();
     void setViewer(boost::shared_ptr< PangolinDSOViewer > viewer) 
@@ -191,4 +192,5 @@ class Estimator
     bool initFirstPoseFlag;
     bool initThreadFlag;
     boost::shared_ptr< PangolinDSOViewer > myViewer;
+    set<int> seen_points;
 };
