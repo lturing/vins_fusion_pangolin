@@ -45,7 +45,7 @@ Estimator::~Estimator()
         LOG(INFO) << "join thread";
     }
     loop_graph->shutdown();
-    while(!loop_graph->is_optimize_buf_empty())
+    while(!loop_graph->is_optimize_buf_empty() || ! loop_graph->is_kf_buf_empty())
     {
         std::chrono::milliseconds dura(10);
         std::this_thread::sleep_for(dura);
@@ -74,6 +74,7 @@ void Estimator::clearState()
         featureBuf.pop();
 
     prevTime = -1;
+    addkfTime = -1;
     curTime = 0;
     openExEstimation = 0;
     initP = Eigen::Vector3d(0, 0, 0);
@@ -204,7 +205,7 @@ void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
         featureFrame = featureTracker.trackImage(t, _img);
     else
         featureFrame = featureTracker.trackImage(t, _img, _img1);
-    //std::cout << "featureTracker time: " << featureTrackerTime.toc() << std::endl;
+    std::cout << "featureTracker time: " << featureTrackerTime.toc() << " ms" << std::endl;
 
     cv::Mat imgTrack = featureTracker.getTrackImage();
 
@@ -225,7 +226,7 @@ void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
         mBuf.unlock();
         TicToc processTime;
         processMeasurements();
-        std::cout << "process time: " << processTime.toc() << std::endl;
+        std::cout << "process time: " << processTime.toc() << " ms" << std::endl;
     }
     
 }
@@ -367,7 +368,8 @@ void Estimator::processMeasurements()
             //pubKeyframe(*this);
             //pubTF(*this, header);
 
-            float SKIP_DIS = 0.001;
+            float SKIP_DIS = 0.01;
+            float SKIP_TIME = 0.5;
             if (solver_flag == NON_LINEAR && marginalization_flag == MARGIN_OLD)
             {
                 Vector3d vio_T_w_i;
@@ -384,7 +386,7 @@ void Estimator::processMeasurements()
                 int sequence = 1;
 
                 //std::cout << "point_3d.size()=" << point_3d.size() << ", point_2d_uv.size()=" << point_2d_uv.size() << ", point_2d_normal.size()=" << point_2d_normal.size() << std::endl;
-                if ((vio_T_w_i - last_t).norm() > SKIP_DIS)
+                if ((vio_T_w_i - last_t).norm() > SKIP_DIS && (curTime - addkfTime) > SKIP_TIME)
                 {
                     KeyFrame* keyframe = new KeyFrame(featureTracker.m_camera[0], ric[0], tic[0], frame_time, frame_index, vio_T_w_i, vio_R_w_i, image, image_result, point3d, 
                                         point_3d, point_2d_uv, point_2d_normal, point_id, sequence);
@@ -392,6 +394,7 @@ void Estimator::processMeasurements()
                     loop_graph->addKeyFrame(keyframe, 1);
                     frame_index += 1;
                     last_t = vio_T_w_i; // p_w_i
+                    addkfTime = curTime;
                 }
             }
             

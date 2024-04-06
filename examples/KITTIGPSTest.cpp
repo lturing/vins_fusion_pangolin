@@ -16,6 +16,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgcodecs/legacy/constants_c.h>
+#include <boost/filesystem.hpp>
 #include "estimator.h"
 #include "viewer.h"
 
@@ -50,6 +51,12 @@ int main(int argc, char** argv)
 
     boost::shared_ptr<PangolinDSOViewer> myViewer(new PangolinDSOViewer(COL, ROW));
     estimator.setViewer(myViewer);
+
+    if (boost::filesystem::exists(OUTPUT_FOLDER))
+    {
+        boost::filesystem::remove_all(OUTPUT_FOLDER);
+    }
+    boost::filesystem::create_directories(OUTPUT_FOLDER);
 
 	FILE* outFile;
 	outFile = fopen((OUTPUT_FOLDER + "/vio.txt").c_str(),"w");

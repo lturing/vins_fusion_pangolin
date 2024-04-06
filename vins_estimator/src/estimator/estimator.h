@@ -112,6 +112,7 @@ class Estimator
     queue<pair<double, Eigen::Vector3d>> gyrBuf;
     queue<pair<double, pair<pair<cv::Mat, cv::Mat>, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1> > > > > > > featureBuf;
     double prevTime, curTime;
+    double addkfTime;
     bool openExEstimation;
 
     std::thread trackThread;

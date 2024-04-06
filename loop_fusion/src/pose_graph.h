@@ -51,6 +51,7 @@ public:
 	PoseGraph();
 	~PoseGraph();
 	void addKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop);
+    void processKeyFrame();
 	void loadKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop);
 	void loadVocabulary(std::string voc_path);
 	void setIMUFlag(bool _use_imu);
@@ -67,6 +68,7 @@ public:
     camodocal::CameraPtr m_camera;
     void shutdown() { is_running = false;};
     bool is_optimize_buf_empty() {return optimize_buf.empty();};
+    bool is_kf_buf_empty() { return keyFrameBuf.empty(); }
     void setViewer(boost::shared_ptr< PangolinDSOViewer > viewer) {myViewer = viewer;};
 
 private:
@@ -80,7 +82,10 @@ private:
 	std::mutex m_path;
 	std::mutex m_drift;
 	std::thread t_optimization;
+    std::thread t_loopdetect;
 	std::queue<int> optimize_buf;
+    std::queue<KeyFrame*> keyFrameBuf;
+    bool flag_detect_loop_;
 
 	int global_index;
 	int sequence_cnt;

@@ -48,6 +48,7 @@ find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(Sophus REQUIRED)
+find_package(Boost COMPONENTS filesystem REQUIRED)
 
 include_directories(
 ${PROJECT_SOURCE_DIR}
@@ -68,7 +69,9 @@ ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
 ${CERES_INCLUDE_DIRS}
 ${Sophus_INCLUDE_DIRS}
+${Boost_INCLUDE_DIRS}
 )
+
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
@@ -156,9 +159,11 @@ ${EIGEN3_LIBS}
 ${Pangolin_LIBRARIES}
 ${CERES_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/ThirdParty/DBoW/lib/libDBoW2.so
+${Boost_LIBRARIES}
 -lboost_serialization
 -lcrypto
 )
+
 
 # Build examples
 

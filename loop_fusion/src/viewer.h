@@ -34,7 +34,8 @@ public:
 
     void close();
 
-    void publishPointPoseFrame(std::vector<Sophus::SE3f>& trajs, std::vector<Eigen::Vector3f>& points3d, cv::Mat& _frame);
+    void publishPointPoseFrame(std::vector<Sophus::SE3f>& trajs, std::vector<Eigen::Vector3f>& points3d, cv::Mat& _frame, bool is_loop);
+
     void GetCurrentOpenGLCameraMatrix(pangolin::OpenGlMatrix &M, pangolin::OpenGlMatrix &MOw);
     // void pushLiveFrame( shared_ptr<Frame> image);
 

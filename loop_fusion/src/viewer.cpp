@@ -79,49 +79,49 @@ void PangolinDSOViewer::run() {
 
         {
             unique_lock<mutex> lk3d(model3DMutex);
-            {
-                // allFramePoses
-                //if (allFramePoses.size() > 0) Visualization3D_camera.Follow();
-                
-                Visualization3D_display.Activate(Visualization3D_camera);
-
-                // trajectory
-                if (settings_showTrajectory)
-                {
-                    if (settings_followCamera)
-                    {
-                        GetCurrentOpenGLCameraMatrix(Twc, Ow);
-                        Visualization3D_camera.Follow(Twc);
-                    }
-                    
-                    float colorRed[3] = {1, 0, 0};
-                    glColor3f(colorRed[0], colorRed[1], colorRed[2]);
-                    glLineWidth(3);
-                    glBegin(GL_LINE_STRIP);
-                    for (unsigned int i = 0; i < allFramePoses.size(); i++) {
-                        Sophus::SE3f pose = allFramePoses[i];
-                        glVertex3d(pose.translation()[0], pose.translation()[1], pose.translation()[2]);
-                    }
-                    glEnd(); 
-                }
-
-                if (settings_showPoints)
-                {
-                    float pointSize = 0.2;
-                    glPointSize(pointSize);
-                    glBegin(GL_POINTS);
-                    glColor3f(0.0,0.0,0.0);
-
-                    for(size_t i=0, iend=mapPoints.size(); i<iend;i++)
-                    {
-                        Eigen::Vector3f pos = mapPoints[i];
-                        glVertex3f(pos(0),pos(1),pos(2));
-                    }
-                    glEnd();
-                }
-
-            }
+            // allFramePoses
+            //if (allFramePoses.size() > 0) Visualization3D_camera.Follow();
             
+            Visualization3D_display.Activate(Visualization3D_camera);
+
+            if (settings_followCamera)
+            {
+                GetCurrentOpenGLCameraMatrix(Twc, Ow);
+                Visualization3D_camera.Follow(Twc);
+            }
+
+            // trajectory
+            if (settings_showTrajectory)
+            {
+                float colorRed[3] = {1, 0, 0};
+                glColor3f(colorRed[0], colorRed[1], colorRed[2]);
+                glLineWidth(3);
+                glBegin(GL_LINE_STRIP);
+                for (unsigned int i = 0; i < allFramePoses.size(); i++) {
+                    Sophus::SE3f pose = allFramePoses[i];
+                    //glVertex3d(pose.translation()[0], pose.translation()[1], pose.translation()[2]);
+                    glVertex3f(pose.translation()[0], pose.translation()[1], pose.translation()[2]);
+                    //if (i > 1)
+                    //    std::cout << "i=" << i << " " << allFramePoses[i-1].translation().transpose() << ", " << allFramePoses[i].translation().transpose() << std::endl;
+                }
+                glEnd(); 
+            }
+
+            if (settings_showPoints)
+            {
+                float pointSize = 0.2;
+                glPointSize(pointSize);
+                glBegin(GL_POINTS);
+                glColor3f(0.0,0.0,0.0);
+
+                for(size_t i=0, iend=mapPoints.size(); i<iend;i++)
+                {
+                    Eigen::Vector3f pos = mapPoints[i];
+                    glVertex3f(pos(0),pos(1),pos(2));
+                }
+                glEnd();
+            }
+
             /*
             {
                 model3DMutex.lock();
@@ -141,11 +141,11 @@ void PangolinDSOViewer::run() {
                 texVideo.RenderToViewportFlipY();
             }
 
+            // Swap frames and Process Events
+            pangolin::FinishFrame();
         }
-        // Swap frames and Process Events
-        pangolin::FinishFrame();
-
-        usleep(5000);
+        
+        usleep(100000); // 100ms
     }
 
     std::cout << "QUIT Pangolin thread!" << std::endl;
@@ -162,18 +162,23 @@ void PangolinDSOViewer::join() {
 }
 
 
-void PangolinDSOViewer::publishPointPoseFrame(vector<Sophus::SE3f>& trajs, std::vector<Eigen::Vector3f>& points3d, cv::Mat& _frame)
+void PangolinDSOViewer::publishPointPoseFrame(vector<Sophus::SE3f>& trajs, std::vector<Eigen::Vector3f>& points3d, cv::Mat& _frame, bool is_loop)
 {
     unique_lock<mutex> lk3d(model3DMutex);
-    allFramePoses.clear();
-    allFramePoses.resize(trajs.size());
+    if (is_loop)
+    {
+        allFramePoses.clear();
+        //allFramePoses.resize(trajs.size());
+
+        mapPoints.clear();
+        //mapPoints.resize(points3d.size());
+    }
     for (int i = 0; i < trajs.size(); i++)
     {
         allFramePoses.push_back(trajs[i]); 
     }
     //cv::cvtColor(_frame, frame, cv::COLOR_GRAY2BGR);
-    mapPoints.clear();
-    mapPoints.resize(points3d.size());
+    
     for (int i = 0; i < points3d.size(); i++)
     {
         mapPoints.push_back(points3d[i]);
